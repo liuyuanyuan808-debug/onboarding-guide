@@ -66,6 +66,7 @@ function updateGuide() {
   referenceAuto.classList.toggle("is-guide-hidden", !showAuto);
   referenceAuto.classList.toggle("is-guide-emphasis", showAuto);
   $(".reference-stage").classList.toggle("is-single-step", step.target === "single");
+  guideLayer.classList.toggle("is-single-step", step.target === "single");
   $("#prevGuide").disabled = state.guideStep === 0;
   $("#nextGuide").textContent = state.guideStep === guideSteps.length - 1 ? "完成" : "下一步";
 
@@ -103,6 +104,7 @@ function closeGuide(completed = false) {
   guideLayer.classList.remove("is-visible");
   $(".reference-auto").classList.remove("is-guide-hidden", "is-guide-emphasis");
   $(".reference-stage").classList.remove("is-single-step");
+  guideLayer.classList.remove("is-single-step");
   if (completed) showToast("引导已完成，可随时从 Guide 重新查看");
 }
 
