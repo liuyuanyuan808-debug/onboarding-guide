@@ -201,66 +201,31 @@ input[type="range"] { width: 100%; accent-color: var(--brand); cursor: pointer; 
 .reference-sync { left: 5.2%; top: 14.2%; width: 89.6%; height: 20.7%; border-radius: 20px; }
 .reference-single { left: 5.2%; top: 14.2%; width: 89.6%; height: 20.7%; border-radius: 20px; }
 .reference-levels { left: 5.6%; top: 48.8%; width: 88.8%; height: 20.6%; border-radius: 24px; }
-.guide-selected-device {
+.reference-selected-device {
   position: absolute;
   z-index: 2;
-  top: 15.05%;
-  left: 18.25%;
-  width: 20.2%;
-  height: 11.35%;
+  top: 14.7%;
+  left: 17.7%;
+  width: 21%;
+  height: auto;
   display: none;
-  border: 3px solid #df667a;
-  border-radius: 48% 48% 44% 44% / 43% 43% 57% 57%;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .45);
   pointer-events: none;
 }
-.guide-layer.is-single-step .guide-selected-device { display: block; }
+.reference-stage.is-single-step .reference-selected-device { display: block; }
 .reference-sync-off {
   position: absolute;
   z-index: 2;
-  top: 17.8%;
-  left: 43.15%;
-  width: 13.7%;
-  height: 11.2%;
+  top: 16.8%;
+  left: 41.25%;
+  width: 17.5%;
+  height: auto;
   display: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4%;
-  color: #6f686c;
-  background: #f7f1e8;
-  font-size: clamp(9px, 2.8vw, 12px);
-  font-weight: 600;
-  line-height: 1;
+  pointer-events: none;
 }
-.reference-stage.is-single-step .reference-sync-off { display: flex; }
-.reference-sync-icon {
-  position: relative;
-  width: 60%;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: #aaa4a7;
-}
-.reference-sync-icon::before,
-.reference-sync-icon::after {
-  content: "";
-  position: absolute;
-  width: 38%;
-  height: 18%;
-  border: 2px solid currentColor;
-  border-radius: 999px;
-  transform: rotate(-42deg);
-}
-.reference-sync-icon::before {
-  top: 27%;
-  left: 18%;
-}
-.reference-sync-icon::after {
-  right: 18%;
-  bottom: 27%;
+.reference-stage.is-single-step .reference-sync-off { display: block; }
+.guide-layer.is-single-step { background: transparent; }
+.guide-layer.is-single-step .guide-focus {
+  box-shadow: 0 0 0 9999px rgba(29,22,26,.58), 0 0 0 5px rgba(255,255,255,.18);
 }
 .reference-mode > .status-bar,
 .reference-mode > .app-header,
