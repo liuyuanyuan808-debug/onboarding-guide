@@ -198,8 +198,8 @@ input[type="range"] { width: 100%; accent-color: var(--brand); cursor: pointer; 
 .reference-auto.is-guide-hidden { opacity: 0; }
 .reference-auto.is-guide-emphasis { color: #766b71; font-weight: 700; }
 .reference-target { position: absolute; pointer-events: none; }
-.reference-sync { left: 5.2%; top: 14.2%; width: 89.6%; height: 20.7%; border-radius: 20px; }
-.reference-single { left: 5.2%; top: 14.2%; width: 89.6%; height: 20.7%; border-radius: 20px; }
+.reference-sync { left: 40.8%; top: 16%; width: 20.5%; height: 10.7%; border-radius: 18px; }
+.reference-single { left: 14.3%; top: 15.7%; width: 27.2%; height: 12.3%; border-radius: 18px; }
 .reference-levels { left: 5.6%; top: 48.8%; width: 88.8%; height: 20.6%; border-radius: 24px; }
 .reference-selected-device {
   position: absolute;
@@ -223,10 +223,6 @@ input[type="range"] { width: 100%; accent-color: var(--brand); cursor: pointer; 
   pointer-events: none;
 }
 .reference-stage.is-single-step .reference-sync-off { display: block; }
-.guide-layer.is-single-step { background: transparent; }
-.guide-layer.is-single-step .guide-focus {
-  box-shadow: 0 0 0 9999px rgba(29,22,26,.58), 0 0 0 5px rgba(255,255,255,.18);
-}
 .reference-mode > .status-bar,
 .reference-mode > .app-header,
 .reference-mode > .toast,
