@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f5f3">
   <link rel="icon" href="data:,">
   <title>M5 Ultra 双控与亮灯新手引导 Demo</title>
-  <link rel="stylesheet" href="styles.css?v=20261124-1755">
+  <link rel="stylesheet" href="styles.css?v=20261124-1808">
 </head>
 <body>
   <main class="demo-shell">
@@ -33,171 +33,131 @@
 
       <div class="review-foot">
         <span><i class="status-dot"></i> 可交互原型</span>
-        <span>4 步引导</span>
+        <span>5 步引导</span>
       </div>
     </aside>
 
-    <section class="phone reference-mode" aria-label="M5 Ultra 控制页">
-      <div class="reference-stage" aria-label="M5 Ultra 控制页参考界面">
-        <img class="reference-screen" src="assets/control-reference.png" alt="M5 Ultra 新版控制页">
-        <button class="reference-auto" aria-label="打开自动亮灯设置">Auto</button>
-      </div>
-      <div class="status-bar" aria-hidden="true">
-        <span>9:41</span>
-        <span class="status-icons">● ● ▰</span>
-      </div>
-
-      <header class="app-header">
-        <button class="icon-button" aria-label="返回">‹</button>
-        <div>
-          <p class="header-title">Pump Control</p>
-          <p class="header-subtitle">M5 Ultra</p>
-        </div>
-        <button class="icon-button" id="openSettings" aria-label="设置">⚙</button>
-      </header>
-
-      <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-      <div class="app-scroll">
-        <section class="pump-zone guide-target" data-guide-target="sync">
-          <button class="pump-card is-selected" data-side="L" aria-label="控制左侧设备">
-            <span class="side-badge">L</span>
-            <span class="pump-image" aria-hidden="true"></span>
-            <span class="pump-state"><i></i><b>Connected</b></span>
-            <span class="pump-meta">100% · 00:00</span>
-            <span class="light-glow" aria-hidden="true"></span>
-          </button>
-
-          <button class="sync-button is-on" id="syncButton" aria-pressed="true">
-            <span class="link-symbol" aria-hidden="true">∞</span>
-            <span>SYNC</span>
-          </button>
-
-          <button class="pump-card" data-side="R" aria-label="控制右侧设备">
-            <span class="side-badge">R</span>
-            <span class="pump-image" aria-hidden="true"></span>
-            <span class="pump-state"><i></i><b>Connected</b></span>
-            <span class="pump-meta">100% · 00:00</span>
-            <span class="light-glow" aria-hidden="true"></span>
-          </button>
-        </section>
-
-        <section class="mode-block">
-          <div class="block-heading">
-            <div>
-              <p class="section-label">CURRENT PROGRAM</p>
-              <h2>Manual</h2>
-            </div>
-            <button class="text-button" aria-label="查看更多模式">All modes ›</button>
-          </div>
-          <div class="mode-tabs" role="group" aria-label="吸乳模式">
-            <button class="mode-tab is-active">Stimulation</button>
-            <button class="mode-tab">Expression</button>
-            <button class="mode-tab">Mixed</button>
-          </div>
-        </section>
-
-        <section class="level-block guide-target" data-guide-target="levels">
-          <div class="level-column">
-            <div class="level-label"><span>L Level</span><strong id="leftLevel">4</strong></div>
-            <div class="stepper">
-              <button data-level-side="L" data-level-delta="-1" aria-label="降低左侧档位">−</button>
-              <span>1–9</span>
-              <button data-level-side="L" data-level-delta="1" aria-label="提高左侧档位">＋</button>
-            </div>
-          </div>
-          <span class="independent-label">Independent</span>
-          <div class="level-column">
-            <div class="level-label"><span>R Level</span><strong id="rightLevel">4</strong></div>
-            <div class="stepper">
-              <button data-level-side="R" data-level-delta="-1" aria-label="降低右侧档位">−</button>
-              <span>1–9</span>
-              <button data-level-side="R" data-level-delta="1" aria-label="提高右侧档位">＋</button>
-            </div>
-          </div>
-        </section>
-
-        <section class="light-block guide-target" data-guide-target="light">
-          <div class="light-heading">
-            <div class="light-title">
-              <span class="bulb" aria-hidden="true">☼</span>
-              <div>
-                <div class="title-row">
-                  <h2>Light</h2>
-                  <span class="auto-pill" id="autoPill">Auto</span>
-                </div>
-                <p><span id="lightScope">Both</span> · <span id="brightnessText">50%</span></p>
-              </div>
-            </div>
-            <button class="switch is-on" id="lightSwitch" role="switch" aria-checked="true" aria-label="亮灯开关"><span></span></button>
-          </div>
-          <div class="slider-row">
-            <span class="dim-icon">☾</span>
-            <input id="brightness" type="range" min="0" max="100" step="25" value="50" aria-label="亮灯亮度">
-            <span class="bright-icon">☀</span>
-          </div>
-        </section>
-
-        <button class="pump-action" id="pumpAction">
-          <span class="action-icon">▶</span>
-          <span>Start Pumping</span>
-        </button>
-      </div>
-
-      <nav class="bottom-nav" aria-label="主导航">
-        <button class="is-active"><span>⌁</span>Control</button>
-        <button><span>▤</span>Records</button>
-        <button id="navHelp"><span>?</span>Guide</button>
-      </nav>
-
-      <div class="guide-layer is-visible" id="guideLayer" data-step="sync" aria-modal="true" role="dialog" aria-labelledby="guideTitle" aria-describedby="guideBody">
-        <div class="guide-screen" aria-hidden="true">
-          <div class="guide-header"></div>
+    <section class="phone" aria-label="M5 Ultra 原型">
+      <div class="guide-layer is-guiding" id="guideLayer" data-step="sync" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideBody">
+        <div class="guide-screen" id="controlScreen" aria-label="Pump Control">
+          <div class="guide-header" aria-hidden="true"></div>
+          <button class="guide-settings-entry" id="openSettings" data-guide-control aria-label="设备管理"></button>
           <div class="guide-devices">
-            <span class="guide-device guide-device-left"></span>
-            <span class="guide-device guide-device-right"></span>
+            <button class="guide-device guide-device-left" data-side="L" data-guide-control="single" aria-label="选中左侧设备" aria-pressed="true"></button>
+            <button class="guide-device guide-device-right" data-side="R" data-guide-control="single" aria-label="选中右侧设备" aria-pressed="false"></button>
             <div class="guide-device-info guide-info-left">L <b>100</b><span>13:50</span></div>
             <div class="guide-device-info guide-info-right">R <b id="guideRightBattery">80</b><span id="guideRightTime">12:45</span></div>
-            <span class="guide-sync-icon"></span>
-            <span class="guide-sync-label">Sync</span>
+            <button class="guide-sync" id="syncButton" data-guide-control="sync" aria-pressed="false">
+              <span class="guide-sync-icon" aria-hidden="true"></span>
+              <span class="guide-sync-label">Sync</span>
+            </button>
           </div>
-          <div class="guide-mode">
-            <div class="guide-section-title"><span class="guide-mode-icon"></span>Manual<span class="guide-chevron">›</span></div>
-            <div class="guide-mode-tabs">
-              <span><i class="stimulation">♥</i>Stimulation</span>
-              <span><i class="expression"></i>Expression</span>
-              <span><i class="mixed">♥</i>Mixed</span>
+          <section class="guide-mode" data-guide-control aria-label="吸乳模式">
+            <div class="guide-section-title">
+              <span class="guide-mode-icon" aria-hidden="true"></span><span id="programTitle">Manual</span>
+              <span class="guide-program-time" id="programTime" hidden>20 min</span>
+              <span class="guide-chevron" aria-hidden="true">›</span>
             </div>
-          </div>
-          <div class="guide-levels">
-            <div class="guide-section-title"><span class="guide-level-icon">◴</span>Level <small id="guideLevelRange">0~9</small></div>
+            <div class="guide-mode-tabs" id="modeTabs">
+              <button data-mode="Stimulation" aria-pressed="true"><i class="stimulation" aria-hidden="true">♥</i>Stimulation</button>
+              <button data-mode="Expression" aria-pressed="false"><i class="expression" aria-hidden="true"></i>Expression</button>
+              <button data-mode="Mixed" aria-pressed="false"><i class="mixed" aria-hidden="true">♥</i>Mixed</button>
+            </div>
+            <div class="guide-program-track" id="programTrack" aria-hidden="true" hidden></div>
+          </section>
+          <section class="guide-levels" data-guide-control="levels" aria-label="档位调节">
+            <div class="guide-section-title">
+              <span class="guide-level-icon" aria-hidden="true">◴</span>Level <small>1~9</small>
+              <button class="guide-boost" id="boostButton" aria-pressed="false">Milk Boost</button>
+            </div>
             <div class="guide-level-columns">
               <div class="guide-level-column">
                 <span class="guide-short-label">L</span><span class="guide-long-label">L Level (1~9)</span>
-                <div class="guide-level-scale"><b class="guide-level-value">5</b></div>
+                <div class="guide-level-scale">
+                  <output class="guide-level-value" id="leftLevel" for="leftLevelInput">5</output>
+                  <input id="leftLevelInput" data-level-side="L" type="range" min="1" max="9" value="5" aria-label="左侧档位">
+                </div>
               </div>
               <div class="guide-level-column guide-level-both">
-                <span><span class="guide-chain"></span>Both</span>
-                <div class="guide-level-scale"><span class="guide-level-value guide-arrows"></span></div>
+                <span><span class="guide-chain" aria-hidden="true"></span>Both</span>
+                <div class="guide-level-scale">
+                  <div class="guide-level-value guide-arrows">
+                    <button data-level-delta="1" aria-label="同时提高左右档位"></button>
+                    <button data-level-delta="-1" aria-label="同时降低左右档位"></button>
+                  </div>
+                </div>
               </div>
               <div class="guide-level-column">
                 <span class="guide-short-label">R</span><span class="guide-long-label">R Level (1~9)</span>
-                <div class="guide-level-scale"><b class="guide-level-value">6</b></div>
+                <div class="guide-level-scale">
+                  <output class="guide-level-value" id="rightLevel" for="rightLevelInput">6</output>
+                  <input id="rightLevelInput" data-level-side="R" type="range" min="1" max="9" value="6" aria-label="右侧档位">
+                </div>
               </div>
             </div>
-          </div>
-          <div class="guide-light">
-            <div class="guide-section-title"><span class="guide-bulb"></span>Light <small>Auto</small><span class="switch is-on"><span></span></span></div>
-            <div class="guide-light-slider">
-              <span class="guide-light-value">25%</span>
-              <div class="guide-light-track"><span></span><span></span><span></span><span></span><span></span></div>
+          </section>
+          <section class="guide-light" data-guide-control="light" aria-label="夜灯">
+            <div class="guide-section-title">
+              <span class="guide-bulb" aria-hidden="true"></span>Light <small id="autoPill">Auto</small>
+              <button class="switch" id="lightSwitch" role="switch" aria-checked="false" aria-label="夜灯开关"><span></span></button>
             </div>
+            <div class="guide-light-slider">
+              <output class="guide-light-value" id="brightnessText" for="brightness">0%</output>
+              <div class="guide-light-track" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+              <input id="brightness" type="range" min="0" max="100" step="25" value="0" aria-label="夜灯亮度">
+            </div>
+          </section>
+          <button class="guide-start" id="startPumping" data-guide-control>Start Pumping</button>
+          <div class="guide-paused" id="pumpActions" data-guide-control hidden>
+            <button id="finishPumping"><i aria-hidden="true"></i>Hold to finish</button>
+            <button class="guide-resume" id="pausePumping" aria-label="暂停吸乳"></button>
           </div>
-          <div class="guide-start">Start Pumping</div>
-          <div class="guide-paused"><span><i></i>Hold to finish</span><span class="guide-resume"></span></div>
-          <span class="guide-home-bar"></span>
-          <span class="guide-shade"></span>
-          <span class="guide-gesture">
+          <button class="guide-help" id="navHelp" data-guide-control>Guide</button>
+        </div>
+
+        <section class="device-settings" id="settingsScreen" aria-label="设备管理" hidden>
+          <div class="settings-status" aria-hidden="true">9:41</div>
+          <header class="settings-header">
+            <button id="closeSettings" data-guide-control aria-label="返回控制页">‹</button>
+            <h2>设备管理</h2>
+          </header>
+          <div class="settings-content">
+            <div class="settings-device">
+              <span class="settings-pump" aria-hidden="true"></span><span class="settings-pump" aria-hidden="true"></span>
+              <div><strong>M5 Ultra</strong><span class="settings-batteries">L <i></i> R <i></i></span></div>
+              <span class="guide-chevron" aria-hidden="true">›</span>
+            </div>
+            <h3 class="settings-section-label">设备功能</h3>
+            <section class="settings-light" data-guide-control="duration" aria-label="夜灯时长">
+              <div class="settings-light-heading">
+                <div><h3>夜灯自动开启</h3><p>暂停吸奶时，夜灯将自动开启。</p></div>
+                <button class="switch is-on" id="autoSwitch" role="switch" aria-checked="true" aria-label="夜灯自动开启"><span></span></button>
+              </div>
+              <p class="duration-label">时长</p>
+              <div class="duration-options" role="group" aria-label="夜灯时长选项">
+                <button type="button" data-duration="10" aria-pressed="false">10 秒</button>
+                <button type="button" data-duration="20" aria-pressed="false">20 秒</button>
+                <button type="button" data-duration="30" aria-pressed="true">30 秒</button>
+                <button type="button" id="customDurationButton" aria-pressed="false">自定义</button>
+              </div>
+              <form class="custom-duration" id="customDuration" hidden>
+                <input id="durationInput" type="number" min="1" max="300" step="1" required inputmode="numeric" aria-label="自定义时长（秒）">
+                <span>秒</span><button type="submit">保存</button>
+              </form>
+            </section>
+            <h3 class="settings-section-label">通用设置</h3>
+            <div class="settings-general" aria-hidden="true">
+              <div>固件更新<span>有新版本 <i></i>　›</span></div>
+              <div>恢复出厂设置<span>›</span></div>
+              <div>关闭设备<span>›</span></div>
+            </div>
+            <div class="settings-delete" aria-hidden="true">删除</div>
+          </div>
+        </section>
+
+        <span class="guide-home-bar" aria-hidden="true"></span>
+        <span class="guide-shade" aria-hidden="true"></span>
+        <span class="guide-gesture" aria-hidden="true">
             <svg viewBox="0 0 96 96" focusable="false">
               <defs>
                 <radialGradient id="gestureShading" cx="55%" cy="62%" r="62%">
@@ -208,43 +168,21 @@
               <path fill="url(#gestureShading)" d="M43 7c-6 0-11 5-11 11v29l-8-8c-4-4-11-4-15 0s-4 10 0 15l25 27c5 5 11 8 18 8h8c15 0 27-12 27-27V43c0-5-4-9-9-9-3 0-5 1-7 3-1-5-5-8-10-8-3 0-5 1-7 3V18c0-6-5-11-11-11Z"/>
             </svg>
           </span>
-        </div>
         <article class="coachmark">
           <h2 id="guideTitle">双控同步操作</h2>
           <p id="guideBody">开启双控后，模式、韵律及开始、暂停、继续
             和结束操作会同步。</p>
           <div class="coach-actions">
-            <span id="guideCount" aria-live="polite">1/4</span>
+            <span id="guideCount" aria-live="polite">1/5</span>
             <button class="skip-button" id="skipGuide">Skip</button>
             <button class="next-button" id="nextGuide">Next</button>
           </div>
         </article>
       </div>
 
-      <div class="sheet-layer" id="settingsLayer" aria-hidden="true">
-        <button class="sheet-scrim" id="closeSettings" aria-label="关闭设置"></button>
-        <section class="bottom-sheet" aria-label="自动亮灯设置">
-          <div class="grabber"></div>
-          <div class="sheet-header">
-            <div>
-              <p class="section-label">LIGHT</p>
-              <h2>Auto Light</h2>
-            </div>
-            <button class="switch is-on" id="autoSwitch" role="switch" aria-checked="true" aria-label="自动亮灯开关"><span></span></button>
-          </div>
-          <p class="sheet-copy">暂停吸乳时会自动亮灯；恢复吸乳或达到设定时长后关闭。</p>
-          <p class="section-label duration-label">DURATION</p>
-          <div class="duration-options" role="group" aria-label="自动亮灯时长">
-            <button class="is-active" data-duration="10">10s</button>
-            <button data-duration="20">20s</button>
-            <button data-duration="30">30s</button>
-            <button data-duration="60">1min</button>
-          </div>
-          <button class="sheet-done" id="settingsDone">Done</button>
-        </section>
-      </div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
   </main>
-  <script src="app.js?v=20261124-1755"></script>
+  <script src="app.js?v=20261124-1808"></script>
 </body>
 </html>

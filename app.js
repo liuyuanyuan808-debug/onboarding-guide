@@ -1,50 +1,79 @@
-const state = {
-  guideStep: 0,
-  scenario: "ready",
-  sync: true,
-  selectedSide: "L",
-  levels: { L: 4, R: 4 },
-  lights: { L: 50, R: 50 },
-  remembered: { L: 50, R: 50 },
-  autoLight: true,
-  duration: 10,
-  pumping: false,
-  paused: false,
-  autoTimer: null,
-};
-
 const guideSteps = [
   {
     target: "sync",
     title: "双控同步操作",
-    body: "开启双控后，模式、韵律及开始、暂停、继续\n和结束操作会同步。",
+    body: "点按 Sync 开启或关闭双控。开启后，模式、韵律及开始、暂停、继续和结束操作会同步。",
   },
   {
     target: "single",
     title: "单独管理设备",
-    body: "解除 Sync 后，选中左侧奶碗，即可单独调节\n该设备的模式、韵律及开始、暂停、继续和结\n束状态。",
+    body: "关闭 Sync 后，点按左侧或右侧奶碗切换当前设备。选中的一侧会高亮，可单独管理。",
   },
   {
     target: "levels",
     title: "档位独立调节",
-    body: "无论是否开启双控，左右档位都可独立调节。\n如需同时调节，请选择Both.",
+    body: "拖动左右标尺可独立调节。用 Both 同时调节两侧，也可切到 Milk Boost 继续调档。",
   },
   {
     target: "light",
-    title: "选择亮灯模式",
-    body: "亮灯支持手动和 AUTO 两种模式。选择AUTO\n后，暂停吸乳时自动亮灯，可在设置中调整亮\n灯时长。",
+    title: "调节夜灯",
+    body: "点按开关可开启或关闭夜灯，拖动滑块可调节亮度。开启 Auto 后，暂停吸乳时会自动亮灯。",
+  },
+  {
+    target: "duration",
+    title: "设置夜灯时长",
+    body: "选择 10 秒、20 秒、30 秒或输入自定义时长。暂停吸乳时，自动开启的夜灯会按设定时长关闭。",
   },
 ];
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const sides = ["L", "R"];
+const storageKey = "m5-ultra-night-light";
 const guideLayer = $("#guideLayer");
-const referenceStage = $(".reference-stage");
-let toastTimeout;
-const requestedStep = Number(new URLSearchParams(location.search).get("step"));
-if (Number.isInteger(requestedStep)) {
-  state.guideStep = Math.max(0, Math.min(guideSteps.length - 1, requestedStep - 1));
+const guideControls = $$("[data-guide-control]", guideLayer);
+const controlScreen = $("#controlScreen");
+const settingsScreen = $("#settingsScreen");
+const durationForm = $("#customDuration");
+const durationInput = $("#durationInput");
+const minDuration = Number(durationInput.min);
+const maxDuration = Number(durationInput.max);
+
+function readLightSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKey)) || {};
+  } catch {
+    return {};
+  }
 }
+
+const savedSettings = readLightSettings();
+const validDuration = Number.isInteger(savedSettings.duration) &&
+  savedSettings.duration >= minDuration && savedSettings.duration <= maxDuration;
+const requestedStep = Number(new URLSearchParams(location.search).get("step"));
+const state = {
+  guideStep: Number.isInteger(requestedStep) ? Math.max(0, Math.min(guideSteps.length - 1, requestedStep - 1)) : 0,
+  guiding: true,
+  settingsOpen: false,
+  scenario: "ready",
+  sync: false,
+  selectedSide: "L",
+  modes: { L: "Stimulation", R: "Stimulation" },
+  levels: { L: 5, R: 6 },
+  lights: { L: 0, R: 0 },
+  remembered: { L: 25, R: 25 },
+  autoLight: savedSettings.autoLight !== false,
+  duration: validDuration ? savedSettings.duration : 30,
+  durationIsCustom: validDuration && savedSettings.durationIsCustom === true,
+  pumping: false,
+  paused: false,
+  autoLitSides: new Set(),
+  autoStartedAt: null,
+  autoTimer: null,
+};
+
+let toastTimeout;
+let finishTimer;
 
 function showToast(message) {
   const toast = $("#toast");
@@ -55,29 +84,68 @@ function showToast(message) {
 }
 
 function updateGuide() {
-  const step = guideSteps[state.guideStep];
-  guideLayer.dataset.step = step.target;
-  const isPaused = step.target === "light";
-  $("#guideRightBattery").textContent = isPaused ? "100" : "80";
-  $("#guideRightTime").textContent = isPaused ? "13:50" : "12:45";
-  $("#guideLevelRange").textContent = step.target === "levels" ? "1~9" : "0~9";
-  $("#guideCount").textContent = `${state.guideStep + 1}/${guideSteps.length}`;
-  $("#guideTitle").textContent = step.title;
-  $("#guideBody").textContent = step.body;
-  $("#nextGuide").textContent = state.guideStep === guideSteps.length - 1 ? "Done" : "Next";
+  const step = state.guiding ? guideSteps[state.guideStep] : null;
+  const target = step?.target;
+  guideLayer.classList.toggle("is-guiding", state.guiding);
+  guideLayer.dataset.step = target || "none";
+  if (step) {
+    guideLayer.setAttribute("role", "dialog");
+    guideLayer.setAttribute("aria-modal", "true");
+    guideLayer.setAttribute("aria-labelledby", "guideTitle");
+    guideLayer.setAttribute("aria-describedby", "guideBody");
+    $("#guideCount").textContent = `${state.guideStep + 1}/${guideSteps.length}`;
+    $("#guideTitle").textContent = step.title;
+    $("#guideBody").textContent = step.body;
+    $("#skipGuide").textContent = target === "duration" ? "跳过" : "Skip";
+    $("#nextGuide").textContent = target === "duration" ? "下一步" : "Next";
+  } else {
+    for (const attribute of ["role", "aria-modal", "aria-labelledby", "aria-describedby"]) {
+      guideLayer.removeAttribute(attribute);
+    }
+  }
+  for (const control of guideControls) {
+    const isTarget = control.dataset.guideControl === target;
+    control.inert = state.guiding && !isTarget;
+    control.classList.toggle("is-guide-target", isTarget);
+  }
+  controlScreen.hidden = state.settingsOpen;
+  settingsScreen.hidden = !state.settingsOpen;
+}
+
+function enterGuideStep() {
+  const target = guideSteps[state.guideStep].target;
+  state.settingsOpen = target === "duration";
+  durationForm.hidden = true;
+  if (target === "single") state.sync = false;
+  if (target === "light" && !state.pumping) {
+    state.pumping = true;
+    state.paused = true;
+    startAutoLight();
+  }
+  updateGuide();
+  render();
 }
 
 function openGuide() {
+  state.guiding = true;
   state.guideStep = 0;
-  referenceStage.inert = true;
-  guideLayer.classList.add("is-visible");
-  updateGuide();
+  enterGuideStep();
 }
 
-function closeGuide(completed = false) {
-  guideLayer.classList.remove("is-visible");
-  referenceStage.inert = false;
-  if (completed) showToast("引导已完成，可随时从 Guide 重新查看");
+function closeGuide(completed) {
+  state.guiding = false;
+  state.settingsOpen = false;
+  durationForm.hidden = true;
+  updateGuide();
+  if (completed) showToast("引导已完成，可点按 Guide 重新查看。");
+}
+
+function activeSides() {
+  return state.sync ? sides : [state.selectedSide];
+}
+
+function currentLight(side) {
+  return state.autoLitSides.has(side) ? state.remembered[side] : state.lights[side];
 }
 
 function setSwitch(element, on) {
@@ -85,180 +153,286 @@ function setSwitch(element, on) {
   element.setAttribute("aria-checked", String(on));
 }
 
-function activeSides() {
-  return state.sync ? ["L", "R"] : [state.selectedSide];
-}
-
-function setBrightness(value, fromSlider = false) {
-  const next = Number(value);
-  activeSides().forEach((side) => {
-    state.lights[side] = next;
-    if (next > 0) state.remembered[side] = next;
-  });
-  if (fromSlider && next === 0) showToast("亮度为 0%，灯光已关闭");
+function setBrightness(value) {
+  for (const side of activeSides()) {
+    state.autoLitSides.delete(side);
+    state.lights[side] = value;
+    if (value > 0) state.remembered[side] = value;
+  }
+  if (!state.autoLitSides.size) stopAutoLight();
   render();
 }
 
 function toggleLight() {
-  const sides = activeSides();
-  const anyOn = sides.some((side) => state.lights[side] > 0);
-  sides.forEach((side) => {
-    state.lights[side] = anyOn ? 0 : (state.remembered[side] || 50);
-  });
-  render();
+  const on = activeSides().some((side) => currentLight(side) > 0);
+  setBrightness(on ? 0 : state.remembered[state.selectedSide]);
 }
 
 function toggleSync() {
   if (state.sync) {
     state.sync = false;
-    showToast("双控已关闭，设备保留当前设置");
     render();
     return;
   }
-  if (state.scenario === "offline") {
-    showToast("无法开启同步，请连接两台设备后重试。");
+  if (state.scenario !== "ready") {
+    showToast(state.scenario === "offline" ? "请连接两台设备后开启同步。" : "请将两台设备更新至相同固件版本后再开启同步。");
     return;
   }
-  if (state.scenario === "firmware") {
-    showToast("无法开启同步，请将两台设备更新至相同固件版本后重试。");
-    return;
-  }
+  const source = state.selectedSide;
+  const other = source === "L" ? "R" : "L";
   state.sync = true;
-  state.lights.R = state.lights[state.selectedSide];
-  state.remembered.R = state.remembered[state.selectedSide];
-  showToast("双控已开启，方案及运行状态即将同步。");
+  for (const values of [state.modes, state.levels, state.lights, state.remembered]) {
+    values[other] = values[source];
+  }
+  if (state.paused && state.autoLitSides.size > 0) {
+    if (state.autoLitSides.has(source)) state.autoLitSides.add(other);
+    else state.autoLitSides.delete(other);
+  }
   render();
 }
 
 function setScenario(scenario) {
   state.scenario = scenario;
   if (scenario !== "ready") state.sync = false;
+  if (scenario === "offline" && state.selectedSide === "R") state.selectedSide = "L";
   $$(".segment-item").forEach((button) => button.classList.toggle("is-active", button.dataset.scenario === scenario));
   render();
 }
 
+function setMode(mode) {
+  activeSides().forEach((side) => { state.modes[side] = mode; });
+  render();
+}
+
+function stopAutoLight() {
+  clearTimeout(state.autoTimer);
+  state.autoLitSides.clear();
+  state.autoStartedAt = null;
+  state.autoTimer = null;
+}
+
+function scheduleAutoOff() {
+  clearTimeout(state.autoTimer);
+  if (!state.autoLitSides.size) return;
+  const remaining = state.duration * 1000 - (Date.now() - state.autoStartedAt);
+  if (remaining <= 0) {
+    stopAutoLight();
+    render();
+    return;
+  }
+  state.autoTimer = setTimeout(() => {
+    stopAutoLight();
+    render();
+    showToast("自动夜灯已关闭。");
+  }, remaining);
+}
+
+function startAutoLight() {
+  stopAutoLight();
+  if (!state.autoLight) return;
+  state.autoLitSides = new Set(activeSides().filter((side) => state.lights[side] === 0));
+  if (!state.autoLitSides.size) return;
+  state.autoStartedAt = Date.now();
+  scheduleAutoOff();
+}
+
+function saveLightSettings() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({
+      duration: state.duration,
+      durationIsCustom: state.durationIsCustom,
+      autoLight: state.autoLight,
+    }));
+  } catch {
+    // Settings still apply for the current demo session.
+  }
+}
+
+function setDuration(seconds, isCustom) {
+  state.duration = seconds;
+  state.durationIsCustom = isCustom;
+  durationForm.hidden = true;
+  saveLightSettings();
+  scheduleAutoOff();
+  render();
+}
+
 function render() {
-  const syncButton = $("#syncButton");
-  syncButton.classList.toggle("is-on", state.sync);
-  syncButton.classList.toggle("is-disabled", !state.sync && state.scenario !== "ready");
-  syncButton.setAttribute("aria-pressed", String(state.sync));
+  $("#syncButton").setAttribute("aria-pressed", String(state.sync));
+  $("#guideRightBattery").textContent = state.scenario === "offline" ? "—" : state.sync ? "100" : "80";
+  $("#guideRightTime").textContent = state.scenario === "offline" ? "离线" : state.sync ? "13:50" : "12:45";
 
-  $$(".pump-card").forEach((card) => {
-    const side = card.dataset.side;
-    const offline = side === "R" && state.scenario === "offline";
-    card.classList.toggle("is-selected", state.selectedSide === side);
-    card.classList.toggle("light-on", state.lights[side] > 0 && !offline);
-    card.disabled = offline;
-    const stateLabel = $(".pump-state b", card);
-    const stateDot = $(".pump-state i", card);
-    stateLabel.textContent = offline ? "Not connected" : state.scenario === "firmware" && side === "R" ? "Update needed" : "Connected";
-    stateDot.style.background = offline ? "#aaa3a7" : state.scenario === "firmware" && side === "R" ? "#c27828" : "#168257";
-    $(".pump-meta", card).textContent = offline ? "--" : `${state.lights[side]}% light · ${state.pumping ? "08:42" : "00:00"}`;
-    $(".light-glow", card).style.opacity = state.lights[side] > 0 && !offline ? String(.18 + state.lights[side] / 140) : "0";
-  });
+  for (const button of $$(".guide-device")) {
+    const side = button.dataset.side;
+    button.disabled = side === "R" && state.scenario === "offline";
+    button.setAttribute("aria-pressed", String(!state.sync && side === state.selectedSide));
+    button.style.setProperty("--light-glow", currentLight(side) / 120);
+  }
 
-  $("#leftLevel").textContent = state.levels.L;
-  $("#rightLevel").textContent = state.levels.R;
-  const shownSide = state.selectedSide;
-  const shownBrightness = state.sync ? state.lights.L : state.lights[shownSide];
-  $("#brightness").value = shownBrightness;
-  $("#brightnessText").textContent = `${shownBrightness}%`;
-  $("#lightScope").textContent = state.sync ? "Both" : shownSide === "L" ? "Left" : "Right";
-  setSwitch($("#lightSwitch"), shownBrightness > 0);
+  const mode = state.modes[state.selectedSide];
+  const boost = mode === "Milk Boost";
+  $("#boostButton").setAttribute("aria-pressed", String(boost));
+  $("#programTitle").textContent = boost ? "Milk Boost" : "Manual";
+  $(".guide-mode").classList.toggle("is-boost", boost);
+  $("#programTime").hidden = !boost;
+  $("#programTrack").hidden = !boost;
+  $("#modeTabs").hidden = boost;
+  $$("[data-mode]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
+
+  for (const [side, name] of [["L", "left"], ["R", "right"]]) {
+    const level = state.levels[side];
+    const input = $(`#${name}LevelInput`);
+    input.value = level;
+    input.disabled = side === "R" && state.scenario === "offline";
+    const display = $(`#${name}Level`);
+    display.textContent = level;
+    display.style.setProperty("--level-position", `${(9 - level) * 12.5}%`);
+  }
+
+  const brightness = Math.max(...activeSides().map(currentLight));
+  $("#brightness").value = brightness;
+  $("#brightnessText").textContent = `${brightness}%`;
+  $(".guide-light").style.setProperty("--brightness", `${brightness}%`);
+  setSwitch($("#lightSwitch"), brightness > 0);
   setSwitch($("#autoSwitch"), state.autoLight);
-  $("#autoPill").classList.toggle("is-hidden", !state.autoLight);
+  $("#autoPill").hidden = !state.autoLight;
 
-  const action = $("#pumpAction");
-  action.classList.toggle("is-running", state.pumping);
-  $(".action-icon", action).textContent = !state.pumping ? "▶" : state.paused ? "▶" : "Ⅱ";
-  $("span:last-child", action).textContent = !state.pumping ? "Start Pumping" : state.paused ? "Resume Pumping" : "Pause Pumping";
+  $$("[data-duration]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(!state.durationIsCustom && Number(button.dataset.duration) === state.duration));
+  });
+  const customButton = $("#customDurationButton");
+  customButton.setAttribute("aria-pressed", String(state.durationIsCustom));
+  customButton.textContent = state.durationIsCustom ? `自定义 · ${state.duration} 秒` : "自定义";
+
+  $("#startPumping").hidden = state.pumping;
+  $("#pumpActions").hidden = !state.pumping;
+  $("#pausePumping").classList.toggle("is-paused", state.paused);
+  $("#pausePumping").setAttribute("aria-label", state.paused ? "继续吸乳" : "暂停吸乳");
 }
 
 $("#nextGuide").addEventListener("click", () => {
   if (state.guideStep === guideSteps.length - 1) closeGuide(true);
-  else { state.guideStep += 1; updateGuide(); }
+  else {
+    state.guideStep += 1;
+    enterGuideStep();
+  }
 });
 $("#skipGuide").addEventListener("click", () => closeGuide(false));
 $("#replayGuide").addEventListener("click", openGuide);
 $("#navHelp").addEventListener("click", openGuide);
 
-$$(".pump-card").forEach((card) => card.addEventListener("click", () => {
-  state.selectedSide = card.dataset.side;
+guideLayer.addEventListener("keydown", (event) => {
+  if (!state.guiding || event.key !== "Tab") return;
+  const controls = $$("button, input", guideLayer).filter((element) =>
+    !element.disabled && !element.closest("[inert]") && element.getClientRects().length > 0
+  );
+  const first = controls[0];
+  const last = controls.at(-1);
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
+
+$$(".guide-device").forEach((button) => button.addEventListener("click", () => {
+  if (state.sync) return;
+  state.selectedSide = button.dataset.side;
   render();
 }));
 $("#syncButton").addEventListener("click", toggleSync);
 $("#lightSwitch").addEventListener("click", toggleLight);
-$("#brightness").addEventListener("input", (event) => setBrightness(event.target.value, true));
+$("#brightness").addEventListener("input", (event) => setBrightness(Number(event.target.value)));
 
-$$("[data-level-side]").forEach((button) => button.addEventListener("click", () => {
-  const side = button.dataset.levelSide;
-  state.levels[side] = Math.max(1, Math.min(9, state.levels[side] + Number(button.dataset.levelDelta)));
+$$("[data-level-side]").forEach((input) => input.addEventListener("input", () => {
+  state.levels[input.dataset.levelSide] = Number(input.value);
   render();
 }));
-
-$$(".mode-tab").forEach((button) => button.addEventListener("click", () => {
-  $$(".mode-tab").forEach((item) => item.classList.toggle("is-active", item === button));
-  if (state.sync) showToast(`${button.textContent} 已应用到左右设备`);
-}));
-
-$$(".segment-item").forEach((button) => button.addEventListener("click", () => setScenario(button.dataset.scenario)));
-
-$("#pumpAction").addEventListener("click", () => {
-  if (!state.pumping) {
-    state.pumping = true;
-    state.paused = false;
-  } else if (!state.paused) {
-    state.paused = true;
-    if (state.autoLight && activeSides().every((side) => state.lights[side] === 0)) {
-      activeSides().forEach((side) => { state.lights[side] = state.remembered[side] || 50; });
-      showToast(`已暂停，将亮灯 ${state.duration} 秒`);
-      clearTimeout(state.autoTimer);
-      state.autoTimer = setTimeout(() => {
-        activeSides().forEach((side) => { state.lights[side] = 0; });
-        render();
-        showToast("自动亮灯已到时关闭");
-      }, state.duration * 1000);
-    }
-  } else {
-    state.paused = false;
-    clearTimeout(state.autoTimer);
-    activeSides().forEach((side) => { state.lights[side] = 0; });
+$$("[data-level-delta]").forEach((button) => button.addEventListener("click", () => {
+  const availableSides = state.scenario === "offline" ? ["L"] : sides;
+  for (const side of availableSides) {
+    state.levels[side] = Math.max(1, Math.min(9, state.levels[side] + Number(button.dataset.levelDelta)));
   }
   render();
-});
-
-function openSettings() {
-  $("#settingsLayer").classList.add("is-visible");
-  $("#settingsLayer").setAttribute("aria-hidden", "false");
-}
-function closeSettings() {
-  $("#settingsLayer").classList.remove("is-visible");
-  $("#settingsLayer").setAttribute("aria-hidden", "true");
-}
-$("#openSettings").addEventListener("click", openSettings);
-$(".reference-auto").addEventListener("click", openSettings);
-$("#closeSettings").addEventListener("click", closeSettings);
-$("#settingsDone").addEventListener("click", closeSettings);
-$("#autoSwitch").addEventListener("click", () => {
-  state.autoLight = !state.autoLight;
-  render();
-  if (state.autoLight) showToast("自动亮灯已开启，暂停吸乳时会自动亮灯。");
-});
-$$("[data-duration]").forEach((button) => button.addEventListener("click", () => {
-  state.duration = Number(button.dataset.duration);
-  $$("[data-duration]").forEach((item) => item.classList.toggle("is-active", item === button));
 }));
 
+$$("[data-mode]").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
+$("#boostButton").addEventListener("click", () => setMode(state.modes[state.selectedSide] === "Milk Boost" ? "Stimulation" : "Milk Boost"));
+$$(".segment-item").forEach((button) => button.addEventListener("click", () => setScenario(button.dataset.scenario)));
+
+$("#startPumping").addEventListener("click", () => {
+  state.pumping = true;
+  state.paused = false;
+  render();
+});
+$("#pausePumping").addEventListener("click", () => {
+  state.paused = !state.paused;
+  if (state.paused) startAutoLight();
+  else stopAutoLight();
+  render();
+});
+const finishButton = $("#finishPumping");
+function finishPumping() {
+  state.pumping = false;
+  state.paused = false;
+  stopAutoLight();
+  render();
+}
+finishButton.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0) return;
+  finishButton.setPointerCapture(event.pointerId);
+  finishTimer = setTimeout(finishPumping, 500);
+});
+for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+  finishButton.addEventListener(type, () => clearTimeout(finishTimer));
+}
+finishButton.addEventListener("click", (event) => {
+  if (event.detail === 0) finishPumping();
+});
+
+$("#openSettings").addEventListener("click", () => {
+  state.settingsOpen = true;
+  updateGuide();
+});
+$("#closeSettings").addEventListener("click", () => {
+  state.settingsOpen = false;
+  durationForm.hidden = true;
+  updateGuide();
+  $("#openSettings").focus({ preventScroll: true });
+});
+$("#autoSwitch").addEventListener("click", () => {
+  state.autoLight = !state.autoLight;
+  if (!state.autoLight) stopAutoLight();
+  else if (state.paused) startAutoLight();
+  saveLightSettings();
+  render();
+});
+$$("[data-duration]").forEach((button) => button.addEventListener("click", () => setDuration(Number(button.dataset.duration), false)));
+$("#customDurationButton").addEventListener("click", () => {
+  durationInput.value = state.duration;
+  durationForm.hidden = false;
+  durationInput.select();
+});
+durationForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  setDuration(durationInput.valueAsNumber, true);
+  $("#customDurationButton").focus({ preventScroll: true });
+});
+
 $("#resetDemo").addEventListener("click", () => {
+  stopAutoLight();
   Object.assign(state, {
-    scenario: "ready", sync: true, selectedSide: "L", levels: { L: 4, R: 4 },
-    lights: { L: 50, R: 50 }, remembered: { L: 50, R: 50 }, autoLight: true,
-    duration: 10, pumping: false, paused: false,
+    sync: false, selectedSide: "L", levels: { L: 5, R: 6 },
+    modes: { L: "Stimulation", R: "Stimulation" },
+    lights: { L: 0, R: 0 }, remembered: { L: 25, R: 25 },
+    autoLight: true, duration: 30, durationIsCustom: false,
+    pumping: false, paused: false,
   });
+  saveLightSettings();
   setScenario("ready");
   openGuide();
 });
 
-render();
-referenceStage.inert = true;
-updateGuide();
+enterGuideStep();
