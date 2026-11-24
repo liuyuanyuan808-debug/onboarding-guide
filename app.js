@@ -114,8 +114,7 @@ function updateGuide() {
     $("#guideCount").textContent = `${state.guideStep + 1}/${guideSteps.length}`;
     $("#guideTitle").textContent = step.title;
     $("#guideBody").textContent = step.body;
-    $("#skipGuide").textContent = target === "duration" ? "跳过" : "Skip";
-    $("#nextGuide").textContent = target === "duration" ? "下一步" : "Next";
+    $("#nextGuide").textContent = state.guideStep === guideSteps.length - 1 ? "Done" : "Next";
   } else {
     for (const attribute of ["role", "aria-modal", "aria-labelledby", "aria-describedby"]) {
       guideLayer.removeAttribute(attribute);
