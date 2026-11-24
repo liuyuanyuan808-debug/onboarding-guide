@@ -135,6 +135,7 @@ function enterGuideStep() {
   const target = guideSteps[state.guideStep].target;
   state.settingsOpen = target === "duration";
   if (!durationPicker.hidden) closeDurationPicker(false);
+  if (target === "sync") state.sync = state.scenario === "ready";
   if (target === "single") state.sync = false;
   if (target === "light" && !state.pumping) {
     state.pumping = true;

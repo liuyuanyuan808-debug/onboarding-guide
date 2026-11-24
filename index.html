@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f5f3">
   <link rel="icon" href="data:,">
   <title>M5 Ultra 双控与亮灯新手引导 Demo</title>
-  <link rel="stylesheet" href="styles.css?v=20261124-1947">
+  <link rel="stylesheet" href="styles.css?v=20261124-1952">
 </head>
 <body>
   <main class="demo-shell">
@@ -43,11 +43,11 @@
           <div class="guide-header" aria-hidden="true"></div>
           <button class="guide-settings-entry" id="openSettings" data-guide-control aria-label="设备管理"></button>
           <div class="guide-devices">
-            <button class="guide-device guide-device-left" data-side="L" data-guide-control="single" aria-label="选中左侧设备" aria-pressed="true"></button>
+            <button class="guide-device guide-device-left" data-side="L" data-guide-control="single" aria-label="选中左侧设备" aria-pressed="false"></button>
             <button class="guide-device guide-device-right" data-side="R" data-guide-control="single" aria-label="选中右侧设备" aria-pressed="false"></button>
             <div class="guide-device-info guide-info-left">L <b>100</b><span>13:50</span></div>
-            <div class="guide-device-info guide-info-right">R <b id="guideRightBattery">80</b><span id="guideRightTime">12:45</span></div>
-            <button class="guide-sync" id="syncButton" data-guide-control="sync" aria-pressed="false">
+            <div class="guide-device-info guide-info-right">R <b id="guideRightBattery">100</b><span id="guideRightTime">13:50</span></div>
+            <button class="guide-sync" id="syncButton" data-guide-control="sync" aria-pressed="true">
               <span class="guide-sync-icon" aria-hidden="true"></span>
               <span class="guide-sync-label">Sync</span>
             </button>
@@ -190,6 +190,6 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
   </main>
-  <script src="app.js?v=20261124-1947"></script>
+  <script src="app.js?v=20261124-1952"></script>
 </body>
 </html>
