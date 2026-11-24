@@ -20,6 +20,11 @@ const guideSteps = [
     body: "亮灯支持手动和 AUTO 两种模式。选择AUTO后，暂停吸乳时自动亮灯，可在设置中调整亮灯时长。",
   },
   {
+    target: "settings",
+    title: "设备管理",
+    body: "点击右上角的设置进入设备管理页，可调整夜灯和亮灯时长，也可更新固件、恢复出厂设置或关闭设备。",
+  },
+  {
     target: "duration",
     title: "设置夜灯时长",
     body: "选择 10 秒、20 秒、30 秒，或用滚轮自定义时长。暂停吸乳时，自动开启的夜灯会按设定时长关闭。",
@@ -344,13 +349,15 @@ function render() {
   $("#pausePumping").setAttribute("aria-label", state.paused ? "继续吸乳" : "暂停吸乳");
 }
 
-$("#nextGuide").addEventListener("click", () => {
+function advanceGuide() {
   if (state.guideStep === guideSteps.length - 1) closeGuide(true);
   else {
     state.guideStep += 1;
     enterGuideStep();
   }
-});
+}
+
+$("#nextGuide").addEventListener("click", advanceGuide);
 $("#skipGuide").addEventListener("click", () => closeGuide(false));
 $("#replayGuide").addEventListener("click", openGuide);
 $("#navHelp").addEventListener("click", openGuide);
@@ -465,6 +472,11 @@ finishButton.addEventListener("click", (event) => {
 });
 
 $("#openSettings").addEventListener("click", () => {
+  if (state.guiding && guideSteps[state.guideStep].target === "settings") {
+    advanceGuide();
+    $("#autoSwitch").focus({ preventScroll: true });
+    return;
+  }
   state.settingsOpen = true;
   updateGuide();
 });

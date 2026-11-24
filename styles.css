@@ -73,6 +73,9 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
   --coach-surface: #e7e7e7;
   --pump-control: url("assets/control-reference.png");
   --control-red: #7a0a28;
+  --settings-top: 7%;
+  --settings-right: 3.8%;
+  --settings-size: 11.3cqw;
 }
 .guide-screen {
   position: absolute;
@@ -92,9 +95,9 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .guide-devices { position: absolute; inset: 0; }
 .guide-settings-entry {
   position: absolute;
-  top: 7%;
-  right: 3.8%;
-  width: 11.3%;
+  top: var(--settings-top);
+  right: var(--settings-right);
+  width: var(--settings-size);
   aspect-ratio: 1;
   padding: 0;
   border: 0;
@@ -345,6 +348,13 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .guide-home-bar { position: absolute; bottom: .9%; left: 32.1%; width: 35.8%; height: .54%; border-radius: 1cqw; background: #000; pointer-events: none; }
 .guide-shade { display: none; position: absolute; z-index: 1; inset: 0; background: #0009; }
 .is-guiding .guide-shade { display: block; }
+.is-guiding[data-step="settings"] .guide-shade {
+  background: radial-gradient(
+    circle at calc(100% - var(--settings-right) - var(--settings-size) / 2) calc(var(--settings-top) + var(--settings-size) / 2),
+    transparent calc(var(--settings-size) / 2),
+    #0009 calc(var(--settings-size) / 2 + .18cqw)
+  );
+}
 .guide-gesture { display: none; position: absolute; z-index: 3; width: 15cqw; aspect-ratio: 1; transform: rotate(-35deg); pointer-events: none; }
 .guide-gesture svg { width: 100%; height: 100%; overflow: visible; }
 .guide-gesture path { stroke: #f8f8f8; stroke-width: 2; stroke-linejoin: round; }
@@ -353,15 +363,15 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 .is-guiding[data-step="single"] .guide-gesture { display: block; left: 30%; top: 22.2%; }
 .is-guiding[data-step="single"]:has(.guide-device-right[aria-pressed="true"]) .guide-gesture { left: 76.2%; }
 
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-screen { --device-shift: -7.1%; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-devices { clip-path: inset(13.2% 0 0); }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-screen { --device-shift: -7.1%; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-devices { clip-path: inset(13.2% 0 0); }
 .guide-layer[data-step="none"] .guide-devices:has(.guide-device:focus-visible) { clip-path: none; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-mode { top: 27.05%; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-levels { top: 45.75%; height: 26.55%; overflow: hidden; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-short-label { display: none; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-level-columns { margin-top: 2cqw; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-level-scale { height: 34cqw; margin-top: 2.4cqw; }
-.guide-layer:is([data-step="light"], [data-step="none"]) .guide-long-label { display: inline; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-mode { top: 27.05%; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-levels { top: 45.75%; height: 26.55%; overflow: hidden; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-short-label { display: none; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-level-columns { margin-top: 2cqw; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-level-scale { height: 34cqw; margin-top: 2.4cqw; }
+.guide-layer:is([data-step="light"], [data-step="settings"], [data-step="none"]) .guide-long-label { display: inline; }
 
 .device-settings { position: absolute; inset: 0; background: #f7f6f4; color: #211b1f; }
 .settings-status { position: absolute; top: 2.6%; inset-inline: 10% 8%; font-size: 4.1cqw; font-weight: 650; }
@@ -426,6 +436,13 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
   --coach-left: 10.3%;
   --coach-height: 44.5cqw;
   --coach-padding-top: 3.95cqw;
+}
+.guide-layer[data-step="settings"] {
+  --coach-top: 15.4%;
+  --coach-left: 16.7%;
+  --coach-height: 44.5cqw;
+  --coach-padding-top: 4.2cqw;
+  --pointer-x: 89.5%;
 }
 .guide-layer[data-step="duration"] {
   --coach-top: 55.2%;

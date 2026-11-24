@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f5f3">
   <link rel="icon" href="data:,">
   <title>M5 Ultra 双控与亮灯新手引导 Demo</title>
-  <link rel="stylesheet" href="styles.css?v=20261124-1952">
+  <link rel="stylesheet" href="styles.css?v=20261124-2104">
 </head>
 <body>
   <main class="demo-shell">
@@ -33,7 +33,7 @@
 
       <div class="review-foot">
         <span><i class="status-dot"></i> 可交互原型</span>
-        <span>5 步引导</span>
+        <span>6 步引导</span>
       </div>
     </aside>
 
@@ -41,7 +41,7 @@
       <div class="guide-layer is-guiding" id="guideLayer" data-step="sync" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideBody">
         <div class="guide-screen" id="controlScreen" aria-label="Pump Control">
           <div class="guide-header" aria-hidden="true"></div>
-          <button class="guide-settings-entry" id="openSettings" data-guide-control aria-label="设备管理"></button>
+          <button class="guide-settings-entry" id="openSettings" data-guide-control="settings" aria-label="设备管理"></button>
           <div class="guide-devices">
             <button class="guide-device guide-device-left" data-side="L" data-guide-control="single" aria-label="选中左侧设备" aria-pressed="false"></button>
             <button class="guide-device guide-device-right" data-side="R" data-guide-control="single" aria-label="选中右侧设备" aria-pressed="false"></button>
@@ -168,7 +168,7 @@
           <h2 id="guideTitle">双控同步操作</h2>
           <p id="guideBody">开启双控后，模式、韵律及开始、暂停、继续和结束操作会同步。</p>
           <div class="coach-actions">
-            <span id="guideCount" aria-live="polite">1/5</span>
+            <span id="guideCount" aria-live="polite">1/6</span>
             <button class="skip-button" id="skipGuide">Skip</button>
             <button class="next-button" id="nextGuide">Next</button>
           </div>
@@ -190,6 +190,6 @@
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
   </main>
-  <script src="app.js?v=20261124-1952"></script>
+  <script src="app.js?v=20261124-2104"></script>
 </body>
 </html>
