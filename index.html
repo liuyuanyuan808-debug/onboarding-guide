@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f5f3">
   <link rel="icon" href="data:,">
   <title>M5 Ultra 双控与亮灯新手引导 Demo</title>
-  <link rel="stylesheet" href="styles.css?v=20261124-1808">
+  <link rel="stylesheet" href="styles.css?v=20261124-1823">
 </head>
 <body>
   <main class="demo-shell">
@@ -138,12 +138,8 @@
                 <button type="button" data-duration="10" aria-pressed="false">10 秒</button>
                 <button type="button" data-duration="20" aria-pressed="false">20 秒</button>
                 <button type="button" data-duration="30" aria-pressed="true">30 秒</button>
-                <button type="button" id="customDurationButton" aria-pressed="false">自定义</button>
+                <button type="button" id="customDurationButton" aria-pressed="false" aria-haspopup="dialog" aria-controls="durationPicker">自定义</button>
               </div>
-              <form class="custom-duration" id="customDuration" hidden>
-                <input id="durationInput" type="number" min="1" max="300" step="1" required inputmode="numeric" aria-label="自定义时长（秒）">
-                <span>秒</span><button type="submit">保存</button>
-              </form>
             </section>
             <h3 class="settings-section-label">通用设置</h3>
             <div class="settings-general" aria-hidden="true">
@@ -178,11 +174,23 @@
             <button class="next-button" id="nextGuide">Next</button>
           </div>
         </article>
+        <div class="duration-picker" id="durationPicker" hidden>
+          <div class="duration-picker-scrim" aria-hidden="true"></div>
+          <section class="duration-sheet" role="dialog" aria-modal="true" aria-labelledby="durationTitle">
+            <button type="button" class="duration-close" id="closeDurationPicker" aria-label="关闭自定义时长"></button>
+            <h2 id="durationTitle">自定义</h2>
+            <div class="duration-wheels">
+              <div class="duration-wheel" id="durationMinutes" role="spinbutton" tabindex="0" aria-label="分钟"></div>
+              <div class="duration-wheel" id="durationSeconds" role="spinbutton" tabindex="0" aria-label="秒"></div>
+            </div>
+            <button type="button" class="duration-confirm" id="confirmDuration">确认</button>
+          </section>
+        </div>
       </div>
 
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </section>
   </main>
-  <script src="app.js?v=20261124-1808"></script>
+  <script src="app.js?v=20261124-1823"></script>
 </body>
 </html>

@@ -22,7 +22,7 @@ const guideSteps = [
   {
     target: "duration",
     title: "设置夜灯时长",
-    body: "选择 10 秒、20 秒、30 秒或输入自定义时长。暂停吸乳时，自动开启的夜灯会按设定时长关闭。",
+    body: "选择 10 秒、20 秒、30 秒，或用滚轮自定义时长。暂停吸乳时，自动开启的夜灯会按设定时长关闭。",
   },
 ];
 
@@ -34,10 +34,28 @@ const guideLayer = $("#guideLayer");
 const guideControls = $$("[data-guide-control]", guideLayer);
 const controlScreen = $("#controlScreen");
 const settingsScreen = $("#settingsScreen");
-const durationForm = $("#customDuration");
-const durationInput = $("#durationInput");
-const minDuration = Number(durationInput.min);
-const maxDuration = Number(durationInput.max);
+const durationPicker = $("#durationPicker");
+const customDurationButton = $("#customDurationButton");
+const minuteWheel = $("#durationMinutes");
+const secondWheel = $("#durationSeconds");
+const maxMinutes = 5;
+const secondStep = 30;
+
+for (const [wheel, values, unit] of [
+  [minuteWheel, Array.from({ length: maxMinutes }, (_, index) => index + 1), "分"],
+  [secondWheel, [0, secondStep], "秒"],
+]) {
+  wheel.setAttribute("aria-valuemin", values[0]);
+  wheel.setAttribute("aria-valuemax", values.at(-1));
+  for (const value of values) {
+    const row = document.createElement("span");
+    row.className = "duration-option";
+    row.dataset.value = value;
+    row.setAttribute("aria-hidden", "true");
+    row.textContent = `${value} ${unit}`;
+    wheel.append(row);
+  }
+}
 
 function readLightSettings() {
   try {
@@ -49,7 +67,7 @@ function readLightSettings() {
 
 const savedSettings = readLightSettings();
 const validDuration = Number.isInteger(savedSettings.duration) &&
-  savedSettings.duration >= minDuration && savedSettings.duration <= maxDuration;
+  savedSettings.duration >= 1 && savedSettings.duration <= maxMinutes * 60;
 const requestedStep = Number(new URLSearchParams(location.search).get("step"));
 const state = {
   guideStep: Number.isInteger(requestedStep) ? Math.max(0, Math.min(guideSteps.length - 1, requestedStep - 1)) : 0,
@@ -115,7 +133,7 @@ function updateGuide() {
 function enterGuideStep() {
   const target = guideSteps[state.guideStep].target;
   state.settingsOpen = target === "duration";
-  durationForm.hidden = true;
+  if (!durationPicker.hidden) closeDurationPicker(false);
   if (target === "single") state.sync = false;
   if (target === "light" && !state.pumping) {
     state.pumping = true;
@@ -135,7 +153,7 @@ function openGuide() {
 function closeGuide(completed) {
   state.guiding = false;
   state.settingsOpen = false;
-  durationForm.hidden = true;
+  if (!durationPicker.hidden) closeDurationPicker(false);
   updateGuide();
   if (completed) showToast("引导已完成，可点按 Guide 重新查看。");
 }
@@ -251,7 +269,6 @@ function saveLightSettings() {
 function setDuration(seconds, isCustom) {
   state.duration = seconds;
   state.durationIsCustom = isCustom;
-  durationForm.hidden = true;
   saveLightSettings();
   scheduleAutoOff();
   render();
@@ -266,7 +283,6 @@ function render() {
     const side = button.dataset.side;
     button.disabled = side === "R" && state.scenario === "offline";
     button.setAttribute("aria-pressed", String(!state.sync && side === state.selectedSide));
-    button.style.setProperty("--light-glow", currentLight(side) / 120);
   }
 
   const mode = state.modes[state.selectedSide];
@@ -300,9 +316,11 @@ function render() {
   $$("[data-duration]").forEach((button) => {
     button.setAttribute("aria-pressed", String(!state.durationIsCustom && Number(button.dataset.duration) === state.duration));
   });
-  const customButton = $("#customDurationButton");
-  customButton.setAttribute("aria-pressed", String(state.durationIsCustom));
-  customButton.textContent = state.durationIsCustom ? `自定义 · ${state.duration} 秒` : "自定义";
+  customDurationButton.setAttribute("aria-pressed", String(state.durationIsCustom));
+  const minutes = Math.floor(state.duration / 60);
+  const seconds = state.duration % 60;
+  const durationText = [minutes && `${minutes} 分`, seconds && `${seconds} 秒`].filter(Boolean).join(" ");
+  customDurationButton.textContent = state.durationIsCustom ? `自定义 · ${durationText}` : "自定义";
 
   $("#startPumping").hidden = state.pumping;
   $("#pumpActions").hidden = !state.pumping;
@@ -322,8 +340,15 @@ $("#replayGuide").addEventListener("click", openGuide);
 $("#navHelp").addEventListener("click", openGuide);
 
 guideLayer.addEventListener("keydown", (event) => {
-  if (!state.guiding || event.key !== "Tab") return;
-  const controls = $$("button, input", guideLayer).filter((element) =>
+  const pickerOpen = !durationPicker.hidden;
+  if (pickerOpen && event.key === "Escape") {
+    event.preventDefault();
+    closeDurationPicker();
+    return;
+  }
+  if ((!state.guiding && !pickerOpen) || event.key !== "Tab") return;
+  const root = pickerOpen ? durationPicker : guideLayer;
+  const controls = $$("button, input, [tabindex='0']", root).filter((element) =>
     !element.disabled && !element.closest("[inert]") && element.getClientRects().length > 0
   );
   const first = controls[0];
@@ -398,7 +423,6 @@ $("#openSettings").addEventListener("click", () => {
 });
 $("#closeSettings").addEventListener("click", () => {
   state.settingsOpen = false;
-  durationForm.hidden = true;
   updateGuide();
   $("#openSettings").focus({ preventScroll: true });
 });
@@ -410,16 +434,81 @@ $("#autoSwitch").addEventListener("click", () => {
   render();
 });
 $$("[data-duration]").forEach((button) => button.addEventListener("click", () => setDuration(Number(button.dataset.duration), false)));
-$("#customDurationButton").addEventListener("click", () => {
-  durationInput.value = state.duration;
-  durationForm.hidden = false;
-  durationInput.select();
+
+function wheelIndex(wheel) {
+  const rowHeight = wheel.firstElementChild.offsetHeight;
+  if (!rowHeight) return 0;
+  return Math.min(wheel.children.length - 1, Math.max(0, Math.round(wheel.scrollTop / rowHeight)));
+}
+
+function scrollToWheelRow(wheel, index) {
+  const rowHeight = wheel.firstElementChild.offsetHeight;
+  wheel.scrollTop = index * rowHeight;
+}
+
+function updateWheelSelection(wheel) {
+  const index = wheelIndex(wheel);
+  const row = wheel.children[index];
+  wheel.setAttribute("aria-valuenow", row.dataset.value);
+  wheel.setAttribute("aria-valuetext", row.textContent);
+  Array.from(wheel.children).forEach((option, optionIndex) => {
+    option.dataset.distance = Math.abs(optionIndex - index);
+  });
+  return Number(row.dataset.value);
+}
+
+function updateDurationWheels() {
+  const minutes = updateWheelSelection(minuteWheel);
+  const atLimit = minutes === maxMinutes;
+  secondWheel.lastElementChild.hidden = atLimit;
+  secondWheel.setAttribute("aria-valuemax", atLimit ? 0 : secondStep);
+  if (atLimit) scrollToWheelRow(secondWheel, 0);
+  return minutes * 60 + updateWheelSelection(secondWheel);
+}
+
+function closeDurationPicker(restoreFocus = true) {
+  durationPicker.hidden = true;
+  settingsScreen.inert = false;
+  if (restoreFocus) customDurationButton.focus({ preventScroll: true });
+}
+
+customDurationButton.addEventListener("click", () => {
+  const duration = Math.max(60, Math.round(state.duration / secondStep) * secondStep);
+  durationPicker.hidden = false;
+  settingsScreen.inert = true;
+  scrollToWheelRow(minuteWheel, Math.floor(duration / 60) - 1);
+  updateDurationWheels();
+  scrollToWheelRow(secondWheel, (duration % 60) / secondStep);
+  updateDurationWheels();
+  $("#closeDurationPicker").focus({ preventScroll: true });
 });
-durationForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  setDuration(durationInput.valueAsNumber, true);
-  $("#customDurationButton").focus({ preventScroll: true });
+$("#closeDurationPicker").addEventListener("click", () => closeDurationPicker());
+$("#confirmDuration").addEventListener("click", () => {
+  setDuration(updateDurationWheels(), true);
+  closeDurationPicker();
 });
+
+for (const wheel of [minuteWheel, secondWheel]) {
+  wheel.addEventListener("scroll", () => {
+    if (!durationPicker.hidden) updateDurationWheels();
+  });
+  wheel.addEventListener("click", (event) => {
+    if (!event.target.classList.contains("duration-option")) return;
+    scrollToWheelRow(wheel, Array.from(wheel.children).indexOf(event.target));
+    updateDurationWheels();
+  });
+  wheel.addEventListener("keydown", (event) => {
+    const index = wheelIndex(wheel);
+    const last = wheel.lastElementChild.hidden ? 0 : wheel.children.length - 1;
+    const destinations = {
+      ArrowUp: Math.min(last, index + 1), ArrowDown: Math.max(0, index - 1), Home: 0, End: last,
+    };
+    if (!Object.hasOwn(destinations, event.key)) return;
+    event.preventDefault();
+    scrollToWheelRow(wheel, destinations[event.key]);
+    updateDurationWheels();
+  });
+}
 
 $("#resetDemo").addEventListener("click", () => {
   stopAutoLight();
