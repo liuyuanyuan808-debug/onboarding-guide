@@ -32,6 +32,8 @@ const sides = ["L", "R"];
 const storageKey = "m5-ultra-night-light";
 const guideLayer = $("#guideLayer");
 const guideControls = $$("[data-guide-control]", guideLayer);
+const bothLevelTrack = $("#bothLevelTrack");
+const bothLevelHandle = $(".guide-arrows", bothLevelTrack);
 const controlScreen = $("#controlScreen");
 const settingsScreen = $("#settingsScreen");
 const durationPicker = $("#durationPicker");
@@ -221,6 +223,17 @@ function setMode(mode) {
   render();
 }
 
+function levelSides() {
+  return state.scenario === "offline" ? ["L"] : sides;
+}
+
+function adjustBothLevels(delta, startingLevels = state.levels) {
+  for (const side of levelSides()) {
+    state.levels[side] = Math.max(1, Math.min(9, startingLevels[side] + delta));
+  }
+  render();
+}
+
 function stopAutoLight() {
   clearTimeout(state.autoTimer);
   state.autoLitSides.clear();
@@ -303,6 +316,9 @@ function render() {
     display.textContent = level;
     display.style.setProperty("--level-position", `${(9 - level) * 12.5}%`);
   }
+  const controlledSides = levelSides();
+  const bothLevel = controlledSides.reduce((sum, side) => sum + state.levels[side], 0) / controlledSides.length;
+  bothLevelHandle.style.setProperty("--both-level-position", (9 - bothLevel) / 8);
 
   const brightness = Math.max(...activeSides().map(currentLight));
   $("#brightness").value = brightness;
@@ -374,13 +390,44 @@ $$("[data-level-side]").forEach((input) => input.addEventListener("input", () =>
   state.levels[input.dataset.levelSide] = Number(input.value);
   render();
 }));
-$$("[data-level-delta]").forEach((button) => button.addEventListener("click", () => {
-  const availableSides = state.scenario === "offline" ? ["L"] : sides;
-  for (const side of availableSides) {
-    state.levels[side] = Math.max(1, Math.min(9, state.levels[side] + Number(button.dataset.levelDelta)));
-  }
-  render();
-}));
+
+let bothLevelDrag = null;
+let draggedBothLevel = false;
+bothLevelTrack.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || !event.isPrimary) return;
+  bothLevelDrag = {
+    pointerId: event.pointerId,
+    startY: event.clientY,
+    startingLevels: { ...state.levels },
+    pixelsPerLevel: (bothLevelTrack.clientHeight - bothLevelHandle.offsetHeight) / 8,
+    delta: 0,
+  };
+  draggedBothLevel = false;
+  event.target.setPointerCapture(event.pointerId);
+});
+
+bothLevelTrack.addEventListener("pointermove", (event) => {
+  if (bothLevelDrag?.pointerId !== event.pointerId) return;
+  const distance = bothLevelDrag.startY - event.clientY;
+  if (!draggedBothLevel && Math.abs(distance) < 5) return;
+  draggedBothLevel = true;
+  const delta = Math.round(distance / bothLevelDrag.pixelsPerLevel);
+  if (delta === bothLevelDrag.delta) return;
+  bothLevelDrag.delta = delta;
+  adjustBothLevels(delta, bothLevelDrag.startingLevels);
+});
+
+for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) {
+  bothLevelTrack.addEventListener(type, (event) => {
+    if (bothLevelDrag?.pointerId === event.pointerId) bothLevelDrag = null;
+  });
+}
+
+bothLevelTrack.addEventListener("click", (event) => {
+  if (event.detail > 0 && draggedBothLevel) return;
+  const button = event.target.closest("[data-level-delta]");
+  if (button) adjustBothLevels(Number(button.dataset.levelDelta));
+});
 
 $$("[data-mode]").forEach((button) => button.addEventListener("click", () => setMode(button.dataset.mode)));
 $("#boostButton").addEventListener("click", () => setMode(state.modes[state.selectedSide] === "Milk Boost" ? "Stimulation" : "Milk Boost"));

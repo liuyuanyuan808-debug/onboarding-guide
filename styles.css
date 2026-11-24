@@ -227,6 +227,9 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
 }
 .guide-level-both .guide-level-scale {
   background: repeating-linear-gradient(to bottom, #bbb5b8 0 .38cqw, transparent .38cqw 5.2cqw) center / 7.8cqw 80% no-repeat, #f3f1f2;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
 }
 .guide-level-value {
   position: absolute;
@@ -256,8 +259,13 @@ button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
   touch-action: none;
 }
 .guide-level-scale:has(input:focus-visible) .guide-level-value { outline: 2px solid var(--brand); outline-offset: 3px; }
-.guide-arrows { grid-template-rows: 1fr 1fr; background: #fff; color: var(--ink); }
-.guide-arrows button { position: relative; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 5cqw; background: transparent; }
+.guide-arrows {
+  top: calc(4.55cqw + (100% - 9.1cqw) * var(--both-level-position, .5));
+  grid-template-rows: 1fr 1fr;
+  background: #fff;
+  color: var(--ink);
+}
+.guide-arrows button { position: relative; width: 100%; height: 100%; padding: 0; border: 0; border-radius: 5cqw; background: transparent; cursor: inherit; }
 .guide-arrows button:active { background: var(--brand-soft); }
 .guide-arrows button::before {
   position: absolute;
