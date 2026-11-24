@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f5f3">
   <link rel="icon" href="data:,">
   <title>M5 Ultra 双控与亮灯新手引导 Demo</title>
-  <link rel="stylesheet" href="styles.css?v=20260917-1137">
+  <link rel="stylesheet" href="styles.css?v=20261124-1755">
 </head>
 <body>
   <main class="demo-shell">
@@ -40,12 +40,7 @@
     <section class="phone reference-mode" aria-label="M5 Ultra 控制页">
       <div class="reference-stage" aria-label="M5 Ultra 控制页参考界面">
         <img class="reference-screen" src="assets/control-reference.png" alt="M5 Ultra 新版控制页">
-        <button class="reference-auto" data-guide-target="auto" aria-label="打开自动亮灯设置">Auto</button>
-        <img class="reference-selected-device" src="assets/selected-left-reference.png" alt="">
-        <img class="reference-sync-off" src="assets/sync-off-reference.png" alt="">
-        <div class="reference-target reference-sync guide-target" data-guide-target="sync" aria-hidden="true"></div>
-        <div class="reference-target reference-single guide-target" data-guide-target="single" aria-hidden="true"></div>
-        <div class="reference-target reference-levels guide-target" data-guide-target="levels" aria-hidden="true"></div>
+        <button class="reference-auto" aria-label="打开自动亮灯设置">Auto</button>
       </div>
       <div class="status-bar" aria-hidden="true">
         <span>9:41</span>
@@ -155,22 +150,73 @@
         <button id="navHelp"><span>?</span>Guide</button>
       </nav>
 
-      <div class="guide-layer is-visible" id="guideLayer" aria-modal="true" role="dialog" aria-label="新手引导">
-        <div class="guide-focus" id="guideFocus"></div>
-        <article class="coachmark" id="coachmark">
-          <div class="coach-topline">
-            <span id="guideCount">1 / 4</span>
-            <button id="closeGuide" aria-label="关闭引导">×</button>
+      <div class="guide-layer is-visible" id="guideLayer" data-step="sync" aria-modal="true" role="dialog" aria-labelledby="guideTitle" aria-describedby="guideBody">
+        <div class="guide-screen" aria-hidden="true">
+          <div class="guide-header"></div>
+          <div class="guide-devices">
+            <span class="guide-device guide-device-left"></span>
+            <span class="guide-device guide-device-right"></span>
+            <div class="guide-device-info guide-info-left">L <b>100</b><span>13:50</span></div>
+            <div class="guide-device-info guide-info-right">R <b id="guideRightBattery">80</b><span id="guideRightTime">12:45</span></div>
+            <span class="guide-sync-icon"></span>
+            <span class="guide-sync-label">Sync</span>
           </div>
-          <div class="guide-progress" aria-hidden="true"><span id="guideProgress"></span></div>
-          <h2 id="guideTitle">双控同步操作</h2>
-          <p id="guideBody">开启双控后，模式、韵律及开始、暂停、继续和结束操作会同步。</p>
-          <div class="coach-actions">
-            <button class="skip-button" id="skipGuide">跳过</button>
-            <div>
-              <button class="back-button" id="prevGuide" aria-label="上一步">‹</button>
-              <button class="next-button" id="nextGuide">下一步</button>
+          <div class="guide-mode">
+            <div class="guide-section-title"><span class="guide-mode-icon"></span>Manual<span class="guide-chevron">›</span></div>
+            <div class="guide-mode-tabs">
+              <span><i class="stimulation">♥</i>Stimulation</span>
+              <span><i class="expression"></i>Expression</span>
+              <span><i class="mixed">♥</i>Mixed</span>
             </div>
+          </div>
+          <div class="guide-levels">
+            <div class="guide-section-title"><span class="guide-level-icon">◴</span>Level <small id="guideLevelRange">0~9</small></div>
+            <div class="guide-level-columns">
+              <div class="guide-level-column">
+                <span class="guide-short-label">L</span><span class="guide-long-label">L Level (1~9)</span>
+                <div class="guide-level-scale"><b class="guide-level-value">5</b></div>
+              </div>
+              <div class="guide-level-column guide-level-both">
+                <span><span class="guide-chain"></span>Both</span>
+                <div class="guide-level-scale"><span class="guide-level-value guide-arrows"></span></div>
+              </div>
+              <div class="guide-level-column">
+                <span class="guide-short-label">R</span><span class="guide-long-label">R Level (1~9)</span>
+                <div class="guide-level-scale"><b class="guide-level-value">6</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="guide-light">
+            <div class="guide-section-title"><span class="guide-bulb"></span>Light <small>Auto</small><span class="switch is-on"><span></span></span></div>
+            <div class="guide-light-slider">
+              <span class="guide-light-value">25%</span>
+              <div class="guide-light-track"><span></span><span></span><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="guide-start">Start Pumping</div>
+          <div class="guide-paused"><span><i></i>Hold to finish</span><span class="guide-resume"></span></div>
+          <span class="guide-home-bar"></span>
+          <span class="guide-shade"></span>
+          <span class="guide-gesture">
+            <svg viewBox="0 0 96 96" focusable="false">
+              <defs>
+                <radialGradient id="gestureShading" cx="55%" cy="62%" r="62%">
+                  <stop stop-color="#bdbdbd" />
+                  <stop offset="1" stop-color="#fff" />
+                </radialGradient>
+              </defs>
+              <path fill="url(#gestureShading)" d="M43 7c-6 0-11 5-11 11v29l-8-8c-4-4-11-4-15 0s-4 10 0 15l25 27c5 5 11 8 18 8h8c15 0 27-12 27-27V43c0-5-4-9-9-9-3 0-5 1-7 3-1-5-5-8-10-8-3 0-5 1-7 3V18c0-6-5-11-11-11Z"/>
+            </svg>
+          </span>
+        </div>
+        <article class="coachmark">
+          <h2 id="guideTitle">双控同步操作</h2>
+          <p id="guideBody">开启双控后，模式、韵律及开始、暂停、继续
+            和结束操作会同步。</p>
+          <div class="coach-actions">
+            <span id="guideCount" aria-live="polite">1/4</span>
+            <button class="skip-button" id="skipGuide">Skip</button>
+            <button class="next-button" id="nextGuide">Next</button>
           </div>
         </article>
       </div>
@@ -199,6 +245,6 @@
       </div>
     </section>
   </main>
-  <script src="app.js?v=20260917-1137"></script>
+  <script src="app.js?v=20261124-1755"></script>
 </body>
 </html>

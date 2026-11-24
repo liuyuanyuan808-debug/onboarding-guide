@@ -1,5 +1,5 @@
 const state = {
-  guideStep: Math.max(0, Math.min(3, Number(new URLSearchParams(location.search).get("step") || 1) - 1)),
+  guideStep: 0,
   scenario: "ready",
   sync: true,
   selectedSide: "L",
@@ -17,30 +17,34 @@ const guideSteps = [
   {
     target: "sync",
     title: "双控同步操作",
-    body: "开启双控后，模式、韵律及开始、暂停、继续和结束操作会同步。",
+    body: "开启双控后，模式、韵律及开始、暂停、继续\n和结束操作会同步。",
   },
   {
     target: "single",
     title: "单独管理设备",
-    body: "解除 Sync 后，选中左侧奶碗，即可单独调节该设备的模式、韵律及开始、暂停、继续和结束状态。",
+    body: "解除 Sync 后，选中左侧奶碗，即可单独调节\n该设备的模式、韵律及开始、暂停、继续和结\n束状态。",
   },
   {
     target: "levels",
     title: "档位独立调节",
-    body: "无论是否开启双控，左右档位都可独立调节。如需同时调节，请选择 Both。",
+    body: "无论是否开启双控，左右档位都可独立调节。\n如需同时调节，请选择Both.",
   },
   {
-    target: "auto",
+    target: "light",
     title: "选择亮灯模式",
-    body: "亮灯支持手动和 AUTO 两种模式。选择 AUTO 后，暂停吸乳时自动亮灯，可在设置中调整亮灯时长。",
+    body: "亮灯支持手动和 AUTO 两种模式。选择AUTO\n后，暂停吸乳时自动亮灯，可在设置中调整亮\n灯时长。",
   },
 ];
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
-const phone = $(".phone");
 const guideLayer = $("#guideLayer");
+const referenceStage = $(".reference-stage");
 let toastTimeout;
+const requestedStep = Number(new URLSearchParams(location.search).get("step"));
+if (Number.isInteger(requestedStep)) {
+  state.guideStep = Math.max(0, Math.min(guideSteps.length - 1, requestedStep - 1));
+}
 
 function showToast(message) {
   const toast = $("#toast");
@@ -52,59 +56,27 @@ function showToast(message) {
 
 function updateGuide() {
   const step = guideSteps[state.guideStep];
-  const target = $(`[data-guide-target="${step.target}"]`);
-  const appScroll = $(".app-scroll");
-  const desiredTop = step.target === "auto" ? 330 : step.target === "levels" ? 285 : 8;
-  appScroll.scrollTop = Math.max(0, target.offsetTop - desiredTop);
-
-  $("#guideCount").textContent = `${state.guideStep + 1} / ${guideSteps.length}`;
-  $("#guideProgress").style.width = `${((state.guideStep + 1) / guideSteps.length) * 100}%`;
+  guideLayer.dataset.step = step.target;
+  const isPaused = step.target === "light";
+  $("#guideRightBattery").textContent = isPaused ? "100" : "80";
+  $("#guideRightTime").textContent = isPaused ? "13:50" : "12:45";
+  $("#guideLevelRange").textContent = step.target === "levels" ? "1~9" : "0~9";
+  $("#guideCount").textContent = `${state.guideStep + 1}/${guideSteps.length}`;
   $("#guideTitle").textContent = step.title;
   $("#guideBody").textContent = step.body;
-  const referenceAuto = $(".reference-auto");
-  const showAuto = step.target === "auto";
-  referenceAuto.classList.toggle("is-guide-hidden", !showAuto);
-  referenceAuto.classList.toggle("is-guide-emphasis", showAuto);
-  $(".reference-stage").classList.toggle("is-single-step", step.target === "single");
-  guideLayer.classList.toggle("is-single-step", step.target === "single");
-  $("#prevGuide").disabled = state.guideStep === 0;
-  $("#nextGuide").textContent = state.guideStep === guideSteps.length - 1 ? "完成" : "下一步";
-
-  requestAnimationFrame(() => {
-    const currentStep = guideSteps[state.guideStep];
-    const currentTarget = $(`[data-guide-target="${currentStep.target}"]`);
-    const phoneRect = phone.getBoundingClientRect();
-    const rect = currentTarget.getBoundingClientRect();
-    const focus = $("#guideFocus");
-    const margin = ["sync", "single"].includes(currentStep.target) ? 4 : currentStep.target === "auto" ? 8 : 6;
-    focus.classList.toggle("is-auto-target", currentStep.target === "auto");
-
-    focus.style.left = `${rect.left - phoneRect.left - margin}px`;
-    focus.style.top = `${rect.top - phoneRect.top - margin}px`;
-    focus.style.width = `${rect.width + margin * 2}px`;
-    focus.style.height = `${rect.height + margin * 2}px`;
-
-    const center = rect.left - phoneRect.left + rect.width / 2;
-    const coach = $("#coachmark");
-    const placeAbove = !["sync", "single"].includes(currentStep.target);
-    coach.classList.toggle("is-above-target", placeAbove);
-    coach.style.top = placeAbove ? "100px" : "auto";
-    coach.style.bottom = placeAbove ? "auto" : "16px";
-    coach.style.setProperty("--pointer-x", `${Math.max(28, Math.min(326, center - 18))}px`);
-  });
+  $("#nextGuide").textContent = state.guideStep === guideSteps.length - 1 ? "Done" : "Next";
 }
 
 function openGuide() {
   state.guideStep = 0;
+  referenceStage.inert = true;
   guideLayer.classList.add("is-visible");
-  requestAnimationFrame(updateGuide);
+  updateGuide();
 }
 
 function closeGuide(completed = false) {
   guideLayer.classList.remove("is-visible");
-  $(".reference-auto").classList.remove("is-guide-hidden", "is-guide-emphasis");
-  $(".reference-stage").classList.remove("is-single-step");
-  guideLayer.classList.remove("is-single-step");
+  referenceStage.inert = false;
   if (completed) showToast("引导已完成，可随时从 Guide 重新查看");
 }
 
@@ -206,14 +178,9 @@ $("#nextGuide").addEventListener("click", () => {
   if (state.guideStep === guideSteps.length - 1) closeGuide(true);
   else { state.guideStep += 1; updateGuide(); }
 });
-$("#prevGuide").addEventListener("click", () => {
-  if (state.guideStep > 0) { state.guideStep -= 1; updateGuide(); }
-});
 $("#skipGuide").addEventListener("click", () => closeGuide(false));
-$("#closeGuide").addEventListener("click", () => closeGuide(false));
 $("#replayGuide").addEventListener("click", openGuide);
 $("#navHelp").addEventListener("click", openGuide);
-window.addEventListener("resize", () => guideLayer.classList.contains("is-visible") && updateGuide());
 
 $$(".pump-card").forEach((card) => card.addEventListener("click", () => {
   state.selectedSide = card.dataset.side;
@@ -293,4 +260,5 @@ $("#resetDemo").addEventListener("click", () => {
 });
 
 render();
-requestAnimationFrame(updateGuide);
+referenceStage.inert = true;
+updateGuide();
